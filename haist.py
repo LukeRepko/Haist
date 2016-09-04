@@ -693,11 +693,3 @@ if dst_console is not None:
 print("")
 
 print("End of script, I hope you enjoyed it!")
-
-"""The meat and potatoes:
-screen -dmS HAIST bash -c 'dd if=/dev/xvdb conv=sync,noerror bs=64K | gzip -c | ssh root@104.130.135.211 "gunzip -c | dd of=/dev/xvdb"; exec bash'
-maybe? screen -dmS HAIST bash -c 'dd if=/dev/xvdb conv=sync,noerror bs=64K | gzip -c | ssh root@104.130.135.211 "gunzip -c | dd of=/dev/xvdb" | tee ~/haist_dd_progress; exec bash'
-screen -dmS HAIST bash -c 'dd if=/dev/xvdb conv=sync,noerror bs=64K | gzip -c | ssh root@104.130.135.211 "gunzip -c | dd of=/dev/xvdb"; exec bash | tee ~/haist_dd_progress'
-depends apt-get update && apt-get update && apt-get install build-essential libssl-dev libffi-dev python-dev python-pip -y && pip install requests urllib3 paramiko --upgrade
-wget https://bootstrap.pypa.io/ez_setup.py -O - | python
-"""
