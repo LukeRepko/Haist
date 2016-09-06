@@ -85,7 +85,7 @@ def get_token(username,password):
         sys.exit()
     else:
         print("Unknown Authentication Error")
-        sys.exit
+        sys.exit()
 
     #loads json reponse into data as a dictionary.
     data = r.json()
@@ -99,10 +99,12 @@ token,account = get_token(username,password)
 print(token)
 
 print("")
-src_srvr = raw_input('Enter Source Server UUID: ')
 
+src_srvr = raw_input('Enter Source Server UUID: ')
+BFV = False
 def get_src_details():
     headers = {"X-Auth-Token": token}
+    src_image = "null"
     for i in range(len(regions)):
         region = (regions[i])
         url = "https://" + region + ".servers.api.rackspacecloud.com/v2/" + account + "/servers/" + src_srvr
@@ -112,21 +114,29 @@ def get_src_details():
             print("Can't connect to server, please try again or check your internet")
             sys.exit()
         if r.status_code == 200:
+            print "Found instance in " + region + "!"
             data = r.json()
             src_name = (data["server"]["name"])
             src_status = (data["server"]["status"])
             src_ip = (data["server"]["accessIPv4"])
             src_flavor = (data["server"]["flavor"]["id"])
-            src_image = (data["server"]["image"]["id"])
-            print "Found instance in " + region + "!"
-            return src_name,src_status,src_ip,src_flavor,src_image,region
+            if (data["server"]["image"]) == "":
+                global BFV
+                BFV = True
+                print("")
+                print("Checking server's \"boot from volume\" details")
+            if BFV != True:
+                src_image = (data["server"]["image"]["id"])
             break
         else:
             print "Searching..." + region
             sys.stdout.write("\033[F") # Cursor up one line
             continue
 
-src_name,src_status,src_ip,src_flavor,src_image,src_region = get_src_details()
+    return src_name,src_status,src_ip,src_flavor,region,src_image
+
+src_name,src_status,src_ip,src_flavor,src_region,src_image = get_src_details()
+
 
 src_vm_mode = "null"
 os_type = "null"
