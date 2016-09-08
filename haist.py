@@ -288,9 +288,17 @@ def set_dst_flavor(question, default="no"):
 set_dst_flavor = set_dst_flavor('Yes to keep the same size and flavor. No to choose a different size or flavor', None)
 
 #Actually set destination flavor variable based on set_dst_flavor bool
-if set_dst_flavor == True:
+if set_dst_flavor and != BFV:
     print "The destination server will be built as the " + src_flavor + " flavor."
     dst_flavor = src_flavor
+if set_dst_flavor and BFV:
+    while valid_vol = False:
+        print "The destination volume must be the same or larger than " + str(src_vol_size) + "GB. Please enter the desired volume size."
+        get_dst_vol_size = raw_input('Size for destination volume: ')
+        if get_dst_vol_size >= src_vol_size:
+            get_dst_vol_size = dst_vol_size
+        else:
+            print "You must enter a volume size greater than or equal to " + str(src_vol_size) + "GB!"
 else:
     print "Please see https://www.rackspace.com/cloud/servers for a breakdown of flavors."
     dst_flavor = str.lower(raw_input('Please enter a valid flavor: '))
