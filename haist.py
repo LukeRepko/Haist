@@ -171,6 +171,9 @@ def check_src_volume():
 
 if BFV:
     src_vol_id,src_vol_size,src_image = check_src_volume()
+    print("Boot from volume server detected!")
+    print "Found source server's boot volume which is " + str(src_vol_size) + "GB."
+
 
 src_vm_mode = "null"
 os_type = "null"
@@ -288,15 +291,18 @@ def set_dst_flavor(question, default="no"):
 set_dst_flavor = set_dst_flavor('Yes to keep the same size and flavor. No to choose a different size or flavor', None)
 
 #Actually set destination flavor variable based on set_dst_flavor bool
-if set_dst_flavor and != BFV:
+if set_dst_flavor and BFV == False:
     print "The destination server will be built as the " + src_flavor + " flavor."
     dst_flavor = src_flavor
 if set_dst_flavor and BFV:
-    while valid_vol = False:
+    print("")
+    valid_vol = False
+    while valid_vol == False:
         print "The destination volume must be the same or larger than " + str(src_vol_size) + "GB. Please enter the desired volume size."
         get_dst_vol_size = raw_input('Size for destination volume: ')
-        if get_dst_vol_size >= src_vol_size:
-            get_dst_vol_size = dst_vol_size
+        if int(get_dst_vol_size) >= int(src_vol_size):
+            dst_vol_size = get_dst_vol_size
+            valid_vol = True
         else:
             print "You must enter a volume size greater than or equal to " + str(src_vol_size) + "GB!"
 else:
