@@ -8,6 +8,9 @@ import paramiko
 import time
 import os
 
+def jprint(jsondoc):
+    print json.dumps(jsondoc, sort_keys=True, indent=2, separators=(',', ': '))
+
 requests.packages.urllib3.disable_warnings()
 
 logo = """\
@@ -137,6 +140,37 @@ def get_src_details():
 
 src_name,src_status,src_ip,src_flavor,src_region,src_image = get_src_details()
 
+def check_src_volume():
+
+    headers = {"X-Auth-Token": token}
+    url = "https://" + src_region + ".blockstorage.api.rackspacecloud.com/v1/" + account + "/volumes/detail"
+
+    try:
+        r = requests.get(url,headers=headers,stream=True)
+    except requests.ConnectionError as e:
+        print("Can't connect to server, please try again or check your internet")
+        sys.exit()
+    if r.status_code == 200:
+        vol_list = r.json()['volumes']
+        vol_found = False
+
+    for volume in vol_list:
+        attachments = volume['attachments']
+        for attachment in attachments:
+            if attachment['server_id'] == src_srvr and attachment['device'] == "/dev/xvda" or "/dev/hda":
+                vol_found = True
+                src_vol_id = attachment['volume_id']
+                src_vol_size = volume['size']
+                src_image = volume['volume_image_metadata']['image_id']
+
+            else:
+                print("Server's root disk could not be found.")
+                sys.exit()
+
+    return src_vol_id,src_vol_size,src_image
+
+if BFV:
+    src_vol_id,src_vol_size,src_image = check_src_volume()
 
 src_vm_mode = "null"
 os_type = "null"
