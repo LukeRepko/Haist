@@ -291,10 +291,10 @@ def set_dst_flavor(question, default="no"):
 set_dst_flavor = set_dst_flavor('Yes to keep the same size and flavor. No to choose a different size or flavor', None)
 
 #Actually set destination flavor variable based on set_dst_flavor bool
-if set_dst_flavor and BFV == False:
+if set_dst_flavor == True and BFV == False:
     print "The destination server will be built as the " + src_flavor + " flavor."
     dst_flavor = src_flavor
-if set_dst_flavor and BFV:
+elif set_dst_flavor and BFV:
     print("")
     valid_vol = False
     while valid_vol == False:
