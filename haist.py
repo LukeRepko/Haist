@@ -874,7 +874,7 @@ def get_dst_console(dst_console):
     except requests.ConnectionError as e:
         print("Can't connect to server, please try again or check your internet")
         sys.exit()
-    if r.status_code == 200:
+    if r.status_code == 202:
         data = r.json()
         dst_console = (data["url"])
         return dst_console
@@ -884,9 +884,13 @@ def get_dst_console(dst_console):
 dst_console = get_dst_console(dst_console)
 
 if dst_console is not None:
-    print("If you'd like to investigate the destination server via console, here is a novnc (HTML5) console link")
+    print("If you'd like to investigate the destination server via console, here is a novnc (HTML5) console link.")
     print(dst_console)
 
 print("")
 
-print("End of script, I hope you enjoyed it!")
+end_of_prog = False
+while end_of_prog == False:
+    raw_input('You have reached the end of the program, press enter to exit.')
+    end_of_prog = True
+    sys.exit
