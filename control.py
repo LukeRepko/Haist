@@ -188,13 +188,15 @@ while dst_poll_status() != "ACTIVE":
         if dst_poll_status() == "ACTIVE":
             break
 
-print "Haist-Controller finished building! (IPv4: " + str(dst_ip) + ")" + " (Password: " + str(dst_srvr_pass) + ")"
+print "Haist-Controller finished building!"
 print("")
 
 for x in range (0,90):
     print ("Connecting to controller in " + str(90 - x) + " seconds. Packages should be installed by then.")
     sys.stdout.write("\033[F")
     time.sleep(1)
+
+print("Please log into the controller now. (IPv4: " + str(dst_ip) + ")" + " (Password: " + str(dst_srvr_pass) + ")")
 
 os.system('ssh-keyscan ' + str(dst_ip) + ' >> ~/.ssh/known_hosts')
 os.system('ssh root@' + dst_ip)
