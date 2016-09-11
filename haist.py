@@ -7,6 +7,7 @@ import getpass
 import paramiko
 import time
 import os
+import re
 
 def jprint(jsondoc):
     print json.dumps(jsondoc, sort_keys=True, indent=2, separators=(',', ': '))
@@ -140,8 +141,23 @@ def get_src_details():
 
 src_name,src_status,src_ip,src_flavor,src_region,src_image = get_src_details()
 
-def check_src_volume():
 
+def check_src_disk():
+    headers = {"X-Auth-Token": token}
+    url = "https://" + src_region + ".servers.api.rackspacecloud.com/v2/" + account + "/flavors/" + str(src_flavor)
+
+    try:
+        r = requests.get(url,headers=headers,stream=True)
+    except requests.ConnectionError as e:
+        print("Can't connect to server, please try again or check your internet")
+        sys.exit()
+    if r.status_code == 200:
+        data = r.json()['flavor']
+        src_disk = data['disk']
+        return src_disk
+
+
+def check_src_volume():
     headers = {"X-Auth-Token": token}
     url = "https://" + src_region + ".blockstorage.api.rackspacecloud.com/v1/" + account + "/volumes/detail"
 
@@ -173,6 +189,9 @@ if BFV:
     src_vol_id,src_vol_size,src_image = check_src_volume()
     print("Boot from volume server detected!")
     print "Found source server's boot volume which is " + str(src_vol_size) + "GB."
+else:
+    src_disk = check_src_disk()
+    print("Source server's disk size is " + str(src_disk) + "GB.")
 
 
 src_vm_mode = "null"
@@ -290,13 +309,16 @@ def set_dst_flavor(question, default="no"):
 
 set_dst_flavor = set_dst_flavor('Yes to keep the same size and flavor. No to choose a different size or flavor', None)
 
-#Actually set destination flavor variable based on set_dst_flavor bool
+if set_dst_flavor:
+    dst_flavor = src_flavor
+
+#set destination flavor variable based on set_dst_flavor bool
+valid_vol = False
 if set_dst_flavor == True and BFV == False:
     print "The destination server will be built as the " + src_flavor + " flavor."
     dst_flavor = src_flavor
 elif set_dst_flavor and BFV:
     print("")
-    valid_vol = False
     while valid_vol == False:
         print "The destination volume must be the same or larger than " + str(src_vol_size) + "GB. Please enter the desired volume size."
         get_dst_vol_size = raw_input('Size for destination volume: ')
@@ -309,10 +331,127 @@ else:
     print "Please see https://www.rackspace.com/cloud/servers for a breakdown of flavors."
     dst_flavor = str.lower(raw_input('Please enter a valid flavor: '))
 
+
+def check_dst_flavor(dst_flavor):
+    headers = {"X-Auth-Token": token}
+    valid_flavor = False
+    while valid_flavor == False:
+        try:
+            url = "https://" + dst_region + ".servers.api.rackspacecloud.com/v2/" + account + "/flavors/" + str(dst_flavor)
+            r = requests.get(url,headers=headers,stream=True)
+        except requests.ConnectionError as e:
+            print("Can't connect to server, please try again or check your internet")
+            sys.exit()
+        if r.status_code == 200:
+            data = r.json()['flavor']
+            dst_disk = data['disk']
+            return dst_disk,dst_flavor
+            valid_flavor = True
+        else:
+            print "The flavor you have input is invalid, please try again."
+            dst_flavor = str.lower(raw_input('Please enter a valid flavor: '))
+
+
+dst_disk,dst_flavor = check_dst_flavor(dst_flavor)
+
+'''
+If source and selected destination are NOT BFV
+check src_disk VS. dst_disk size for issues.
+'''
+
+if int(dst_disk) == 0:
+    dst_BFV = True
+else:
+    dst_BFV = False
+
+if BFV == False and dst_BFV == False:
+    valid_dst_flavor = False
+    dst_BFV = False
+    while valid_dst_flavor == False:
+        if int(dst_disk) >= int(src_disk):
+            print("Valid destination flavor selected.")
+            valid_dst_flavor = True
+        else:
+            print "You must enter a destination flavor whose disk is the same size or larger than the source disk."
+            print "Your source " + src_flavor + " has a " + str(src_disk) + "GB. disk, while your " + str(dst_flavor) + " has a " + str(dst_disk) + "GB. disk."
+            dst_flavor = str.lower(raw_input('Please enter a valid flavor: '))
+            dst_disk,dst_flavor = check_dst_flavor(dst_flavor)
+            if int(dst_disk) == 0:
+                print "Now you'd like to boot from volume? Please enter a volume size greater than " + str(src_disk) + "GB."
+                while dst_BFV == False:
+                    dst_vol_size = raw_input('Volume size: ')
+                    if int(dst_vol_size) >= int(src_disk):
+                        valid_dst_flavor = True
+                        dst_BFV = True
+                        valid_vol = True
+                    else:
+                        print "Please enter a valid volume size larger than or equal to " + str(src_disk) + "GB."
+            else:
+                if int(dst_disk) >= int(src_disk):
+                    print("Valid destination flavor selected.")
+                    valid_dst_flavor = True
+                else:
+                    print "The destination disk is still too small..."
+                    while valid_dst_flavor == False:
+                        print "Your source " + src_flavor + " has a " + str(src_disk) + "GB. disk, while your " + str(dst_flavor) + " has a " + str(dst_disk) + "GB. disk."
+                        dst_flavor = str.lower(raw_input('Please enter a valid flavor: '))
+                        dst_disk,dst_flavor = check_dst_flavor(dst_flavor)
+                        if int(dst_disk) >= int(src_disk):
+                            valid_dst_flavor = True
+                        else:
+                            pass
+
+#If selected dst_flavor is BFV now, set bool to True.
+
+if int(dst_disk) == 0:
+    dst_BFV = True
+else:
+    dst_BFV = False
+
+'''
+This next loop is for destination BFV only, and is being used to get a valid
+destination volume size whether src is BFV or not.
+'''
+
+if valid_vol == False and dst_BFV == True:
+    while valid_vol == False:
+        if BFV == False:
+            if int(src_disk) < 50:
+                print "The destination volume must be the same or larger than 50GB. Please enter the desired volume size."
+                get_dst_vol_size = raw_input('Size for destination volume: ')
+                if int(get_dst_vol_size) >= 50:
+                    dst_vol_size = get_dst_vol_size
+                    valid_vol = True
+                else:
+                    print "You must enter a volume size greater than or equal to 50GB!"
+            if int(src_disk) > 50:
+                print "The destination volume must be the same or larger than " + str(src_disk) + "GB. Please enter the desired volume size."
+                get_dst_vol_size = raw_input('Size for destination volume: ')
+                if int(get_dst_vol_size) >= int(src_disk):
+                    dst_vol_size = get_dst_vol_size
+                    valid_vol = True
+                else:
+                    print "You must enter a volume size greater than or equal to " + str(src_disk) + "GB!"
+        else:
+            print "The destination volume must be the same or larger than " + str(src_vol_size) + "GB. Please enter the desired volume size."
+            get_dst_vol_size = raw_input('Size for destination volume: ')
+            if int(get_dst_vol_size) >= int(src_vol_size):
+                dst_vol_size = get_dst_vol_size
+                valid_vol = True
+            else:
+                print "You must enter a volume size greater than or equal to " + str(src_vol_size) + "GB!"
+
+
 dst_name = raw_input('Enter a name for the destination server: ')
 
+#payload if dst is BFV
+#payload = {'server':{'name': str(dst_name),'flavorRef': dst_flavor,'block_device_mapping_v2':[{'boot_index': '0','uuid': dst_image,'volume_size': dst_vol_size,'source_type': 'image','destination_type': 'volume'}]}}
+
 def build_dst_srvr():
-    payload = {'server':{'name': str(dst_name),'imageRef': dst_image,'flavorRef': dst_flavor}}
+    if dst_BFV:
+        payload = {'server':{'name': str(dst_name),'flavorRef': dst_flavor,'block_device_mapping_v2':[{'boot_index': '0','uuid': dst_image,'volume_size': dst_vol_size,'source_type': 'image','destination_type': 'volume'}]}}
+    else:
+        payload = {'server':{'name': str(dst_name),'imageRef': dst_image,'flavorRef': dst_flavor}}
     headers = {'Content-type': 'application/json', 'X-Auth-Token': token}
     url = "https://" + dst_region + ".servers.api.rackspacecloud.com/v2/" + account + "/servers"
     try:
@@ -488,7 +627,7 @@ print("Destination server has entered rescue mode successfully!")
 print("")
 print("Preparing to log into source server...")
 
-time.sleep(3)
+time.sleep(6)
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -517,12 +656,12 @@ stdin, stdout, stderr = ssh.exec_command('apt-get update')
 type(stdin)
 stdout.readlines()
 stderr.readlines()
-
+time.sleep(1)
 stdin, stdout, stderr = ssh.exec_command('apt-get install sshpass -y')
 type(stdin)
 stdout.readlines()
 stderr.readlines()
-
+time.sleep(1)
 print("")
 print("Installing temporary public rsa key on destination rescue instance.")
 stdin, stdout, stderr = ssh.exec_command("sshpass -p " + str(dst_rescue_pass) + " ssh-copy-id\
