@@ -875,7 +875,7 @@ def get_dst_console(dst_console):
         print("Can't connect to server, please try again or check your internet")
         sys.exit()
     if r.status_code == 200:
-        data = r.json()
+        data = r.json()['console']
         dst_console = (data["url"])
         return dst_console
     else:
