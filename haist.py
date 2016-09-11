@@ -847,7 +847,7 @@ def reset_dst_net(reset_network,dst_reset):
             sys.exit()
 
 dst_reset = reset_dst_net(reset_network,dst_reset)
-
+print("")
 if dst_reset == True:
     for x in range (0,15):
         print ("The reset network request has been sent, resetting..." + str(15 - x))
@@ -874,7 +874,7 @@ def get_dst_console(dst_console):
     except requests.ConnectionError as e:
         print("Can't connect to server, please try again or check your internet")
         sys.exit()
-    if r.status_code == 202:
+    if r.status_code == 200:
         data = r.json()
         dst_console = (data["url"])
         return dst_console
