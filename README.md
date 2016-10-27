@@ -1,8 +1,10 @@
-# Haist. High.Altitude.Server.Transmitter
+# Haist. High.Altitude.Intercontinental.Server.Transmitter
 
-This script can be used to systematically (hastily) clone a Rackspace public cloud server to another, or the same datacenter. It creates a new, "skeleton" server which receives the clone of the source server. 
+Use this script to clone a Rackspace public cloud server to the same, or another datacenter. This is accomplished by building a new server of the desired flavor and size to the datacenter you choose. Both the original, and new servers are placed into rescue mode so that the original server's file system can be systematically cloned (block for block) using the linux command line utility, "dd".
 
-The source server will be placed into rescue mode where /dev/xvdb will be copied (block-for-block) to the destination server which will also be in rescue mode to receive and process the incoming data transmission.
+The destination server's disk size must be the same size, or larger than the original server's disk. This script has "bumpers" which will prevent a smaller local disk, or block storage volume from being specified for the destination server.
+
+Do you have an old Standard flavor server that you'd like to upgrade to a performance flavor like Compute, Memory, or I/O? Using Haist, this can be done with ease. No more fighting with images!
 
 ## Warning...
 ```
