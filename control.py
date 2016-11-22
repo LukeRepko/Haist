@@ -45,14 +45,17 @@ print("")
 Get information from user to auth against identity.
 '''
 username = raw_input('Enter Rackspace username: ')
-password = getpass.getpass('Enter Password: ')
+password = getpass.getpass('Enter Password or API Key: ')
 
-#Request to authenticate
+regions = ['iad', 'ord', 'dfw', 'syd', 'hkg', 'lon']
+
+#Request to authenticate using password
 def get_token(username,password):
     #setting up api call
     url = "https://identity.api.rackspacecloud.com/v2.0/tokens"
     headers = {'Content-type': 'application/json'}
     payload = {'auth':{'passwordCredentials':{'username': username,'password': password}}}
+    payload2 = {'auth':{'RAX-KSKEY:apiKeyCredentials':{'username': username,'apiKey': password}}}
 
     #authenticating against the identity
     try:
@@ -61,8 +64,14 @@ def get_token(username,password):
         print("Connection Error: Check your interwebs!")
         sys.exit()
 
-    #Check status code. If not sucessful, exit.
-    if r.status_code == 200:
+    if r.status_code != 200:
+        r = requests.post(url, headers=headers, json=payload2)
+        if r.status_code != 200:
+            print("Invalid username / password / apiKey")
+            sys.exit()
+        else:
+            print("Authentication was successful!")
+    elif r.status_code == 200:
         print("Authentication was successful!")
     elif r.status_code == 400:
         print("Bad Request. Missing required parameters. This error also occurs if you include both the tenant name and ID in the request.")
@@ -82,7 +91,7 @@ def get_token(username,password):
         sys.exit()
     else:
         print("Unknown Authentication Error")
-        sys.exit
+        sys.exit()
 
     #loads json reponse into data as a dictionary.
     data = r.json()
