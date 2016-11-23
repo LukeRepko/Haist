@@ -15,6 +15,7 @@ runcmd:
  - pip install --upgrade requests
  - pip install urllib3
  - pip install paramiko
+ - pip install -U pyOpenSSL
  - wget https://github.com/LukeRepko/Haist/archive/master.zip -O /root/haist.zip
  - unzip /root/haist.zip -d /root/
  - echo "screen -S Haist-Controller bash -c 'echo && echo \"You are in a screen session, press \"ctrl + ad\" at any time to drop to a shell. screen -r can be used to come back to HAIST.\" && python /root/Haist-master/haist.py; exec bash'" >> /root/.bashrc
