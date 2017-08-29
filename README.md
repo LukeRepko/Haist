@@ -2,7 +2,7 @@
 
 Use this script to clone a Rackspace public cloud server to the same, or another datacenter. This is accomplished by building a new server of the desired flavor and size to the datacenter you choose. Both the original, and new servers are placed into rescue mode so that the source server's file system can be systematically cloned (block for block) using the all powerful, linux command line utility, "dd" over ssh to the destination server's system disk. 
 
-This is all accomplished with some **fairly ugly** python, but it works! :) (TL;DR this was one of my first python scripts so there is MUCH to be improved upon and I'll get around to it one day). The underlying mechanics have shown to be fairly solid regardless. 
+This is all accomplished with some **fairly ugly** python, but it works! :) (TL;DR this was one of my first python scripts so there is MUCH to be improved upon, and I'll get around to it one day). The underlying mechanics have shown to be fairly solid regardless. 
 
 The destination server's disk size must be the same size, or larger than the original server's disk. This script will prevent a smaller local disk, or block storage volume from being specified for the destination server.
 
