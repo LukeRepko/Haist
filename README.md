@@ -11,6 +11,6 @@ Do you have an old Standard flavor server that you'd like to upgrade to a perfor
 This script is still a work in progress, and I intend to eventually add a few features, improvements, and address any open issues.
 
 ## Use:
-control.py should be used which stands up a control server. Once built, you can log into the control server with the provided username and password. After login, the main program will be presented to you in a screen session ready to take the arguments needed to begin processing.  
+control.py should be executed which stands up a control server. Once built, you can log into the control server with the provided username and password. After login, the main program will be presented to you in a screen session ready to take the arguments needed to begin processing.  
 
 The main script, "haist.py" can also be run from a local workstation, but this is not reccommended.
